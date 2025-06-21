@@ -7,3 +7,11 @@ const userData: Prisma.UserCreateInput[] = [
         email: "kimachiakenneth@gmail.com",
     }
 ];
+
+export async function main() {
+  for (const u of userData) {
+    await prisma.user.create({ data: u });
+  }
+}
+
+main();

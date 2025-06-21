@@ -20,3 +20,21 @@ model User{
   name  String?
   
 }
+
+model Claims{
+  id Int @id @default(autoincrement())
+  name String?
+  policy_number Int @unique
+  address String?
+  po_box Int
+  occupation String?
+  telephone String? @unique
+}
+
+model Motor_Claims{
+  id Int @id
+}
+
+model Buglary_Claims{
+  id Int @id
+}
