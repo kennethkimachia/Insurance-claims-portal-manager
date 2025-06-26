@@ -14,11 +14,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id    Int     @id @default(autoincrement())
+model User {
+  id    String  @id @default(uuid())
+  name  String
   email String  @unique
-  name  String?
-  
+  role  String  // 'admin', 'agent', or 'user'
+  // ...other fields
 }
 
 model Claims{

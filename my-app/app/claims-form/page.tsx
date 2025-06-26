@@ -1,4 +1,4 @@
-import MotorForm from "../Forms/MotorForm"
+import MotorForm from "../_Forms/MotorForm"
 
 
 const page = () => {
