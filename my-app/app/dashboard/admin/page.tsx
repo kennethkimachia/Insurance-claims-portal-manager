@@ -1,11 +1,10 @@
-import CreateAgentForm from "@/components/CreateAgentForm"
 export default function page() {
   return (
     <div>
 
-        <p>hey</p>
+      <h1>This is the admin dashboard</h1>
 
-    <CreateAgentForm />
+        
     
     </div>
   )

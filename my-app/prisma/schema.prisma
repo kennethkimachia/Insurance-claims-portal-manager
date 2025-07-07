@@ -13,12 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  AGENT
+  USER
+}
 model User {
-  id    String  @id @default(uuid())
-  name  String
-  email String  @unique
-  role  String  // 'admin', 'agent', or 'user'
-  // ...other fields
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Foreign key for Clerk User
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  role      Role     @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Claims{
