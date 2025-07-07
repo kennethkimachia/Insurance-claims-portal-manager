@@ -13,6 +13,8 @@ import {
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "@/components/mode-toggle";
+import UserSidebar from "@/components/UserSidebar";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,18 +47,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
 
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
-            
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-            <ModeToggle />
-          </header>
-          {children}
+            {children}
 
           </ThemeProvider>
         </body>
