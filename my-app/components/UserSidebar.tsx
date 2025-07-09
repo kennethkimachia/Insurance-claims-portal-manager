@@ -1,57 +1,97 @@
+"use client"
+
+import { FileText, HelpCircle, MessageCircle, Shield, User } from "lucide-react"
+import Link from "next/link"
+
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
-import {HelpCircle, ContactIcon, Paperclip } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-const items = [
+// Navigation items
+const navigationItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Shield,
+  },
+  {
+    title: "All Claims",
+    url: "/all-claims",
+    icon: FileText,
+  },
   {
     title: "FAQ",
-    url: "#",
+    url: "/faq",
     icon: HelpCircle,
   },
   {
-    title: "All claims",
-    url: "#",
-    icon: Paperclip,
-  },
-  {
     title: "Contact Us",
-    url: "#",
-    icon: ContactIcon,
-  }
+    url: "/contact-us",
+    icon: MessageCircle,
+  },
 ]
 
-const UserSidebar = () => {
+export function UserSidebar() {
   return (
-     <Sidebar>
+    <Sidebar>
+      <SidebarHeader className="border-b border-sidebar-border">
+        <div className="flex items-center gap-2 px-2 py-4">
+          <Shield className="h-8 w-8 text-blue-600" />
+          <div>
+            <h2 className="text-lg font-semibold">SecureGuard</h2>
+            <p className="text-xs text-muted-foreground">Insurance Portal</p>
+          </div>
+        </div>
+      </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
+                    <Link href={item.url}>
+                      <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-2 py-2">
+              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                New Claim
+              </Button>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border">
+
+      </SidebarFooter>
     </Sidebar>
   )
 }
-
-export default UserSidebar

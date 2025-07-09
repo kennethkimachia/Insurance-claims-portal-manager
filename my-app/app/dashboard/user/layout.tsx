@@ -1,4 +1,4 @@
-import UserSidebar from "@/components/UserSidebar";
+import {UserSidebar} from "@/components/UserSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import Navbar from "@/components/Navbar";
 
