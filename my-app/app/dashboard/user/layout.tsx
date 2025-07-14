@@ -1,36 +1,31 @@
 import {UserSidebar} from "@/components/UserSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarTrigger,SidebarInset, } from "@/components/ui/sidebar"
 import Navbar from "@/components/Navbar";
 
 
 
-export default function RootLayout({
+export default function UserLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <>
-      <SidebarProvider>
-        <UserSidebar />
-                <SidebarTrigger />
+    <SidebarProvider>
+      <UserSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 justify-between">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>User Portal - Insurance Claims Management</span>
+          </div>
+          <div>
+            <Navbar />
 
-        <main className="w-full">
-          <Navbar />
-
-
-        <div>
-          {children}
-
-        </div>
-        
-      </main>
-
-      </SidebarProvider>
-        
-
-
-        
-    </>
+          </div>
+          
+        </header>
+                  {children}
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
