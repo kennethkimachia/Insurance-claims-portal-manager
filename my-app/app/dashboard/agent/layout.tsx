@@ -13,12 +13,15 @@ export default function AgentLayout({
     <SidebarProvider>
       <AgentSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 justify-between">
           <SidebarTrigger className="-ml-1" />
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Agent Portal - Insurance Claims Management</span>
           </div>
-          <Navbar />
+          <div>
+            <Navbar />
+          </div>
+          
         </header>
                   {children}
       </SidebarInset>
