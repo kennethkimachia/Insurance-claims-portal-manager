@@ -30,20 +30,90 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Claims{
-  id Int @id @default(autoincrement())
-  name String?
-  policy_number Int @unique
-  address String?
-  po_box Int
-  occupation String?
-  telephone String? @unique
+// General claim information provided by the policyholder
+model Claims {
+  id            Int      @id @default(autoincrement())
+  name          String?
+  policy_number Int      @unique
+  address       String?
+  po_box        Int
+  occupation    String?
+  telephone     String?  @unique
+
+  // A claim can be one of these types.
+  motor_claim    Motor_Claims?
+  burglary_claim Burglary_Claims?
 }
 
-model Motor_Claims{
-  id Int @id
+// Specific details for a motor vehicle insurance claim
+model Motor_Claims {
+  id                        Int      @id @default(autoincrement())
+  // Establishes a one-to-one relationship with the Claims model
+  claim                     Claims   @relation(fields: [claim_id], references: [id])
+  claim_id                  Int      @unique
+
+  // --- Incident Details ---
+  date_of_accident          DateTime
+  location_of_accident      String
+  description_of_accident   String   @db.Text // Use Text for potentially long descriptions
+
+  // --- Vehicle & Driver Details ---
+  vehicle_make              String
+  vehicle_model             String
+  vehicle_year              Int
+  vehicle_registration_no   String   @unique
+  driver_name               String   // Name of the person driving at the time
+  driver_license_no         String
+
+  // --- Third-Party & Police Details ---
+  third_party_involved      Boolean  @default(false)
+  third_party_details       String?  // Simple text field for other party's info
+  police_report_filed       Boolean  @default(false)
+  police_station            String?
+  police_report_number      String?
+
+  // --- Damage Details ---
+  description_of_damage     String   @db.Text
+  estimated_repair_cost     Decimal?
 }
 
-model Buglary_Claims{
-  id Int @id
+// Specific details for a burglary insurance claim
+model Burglary_Claims {
+  id                        Int         @id @default(autoincrement())
+  // Establishes a one-to-one relationship with the Claims model
+  claim                     Claims      @relation(fields: [claim_id], references: [id])
+  claim_id                  Int         @unique
+
+  // --- Incident Details ---
+  date_of_loss              DateTime // When the burglary is believed to have occurred
+  date_of_discovery         DateTime // When the policyholder discovered the burglary
+  description_of_incident   String      @db.Text
+
+  // --- Police Report ---
+  police_report_filed       Boolean     @default(false)
+  police_station            String?
+  police_report_number      String?
+
+  // --- Property Damage ---
+  property_damaged          Boolean     @default(false)
+  damage_description        String?     @db.Text
+  estimated_repair_cost     Decimal?
+
+  // --- Stolen Items ---
+  // Establishes a one-to-many relationship with the Stolen_Item model
+  stolen_items              Stolen_Item[]
+}
+
+// A separate model to list items stolen during a burglary
+model Stolen_Item {
+  id                        Int             @id @default(autoincrement())
+  // Establishes a many-to-one relationship back to Burglary_Claims
+  burglary_claim            Burglary_Claims @relation(fields: [burglary_claim_id], references: [id])
+  burglary_claim_id         Int
+
+  // --- Item Details ---
+  item_name                 String
+  item_description          String?         @db.Text
+  purchase_date             DateTime?
+  estimated_value           Decimal
 }
