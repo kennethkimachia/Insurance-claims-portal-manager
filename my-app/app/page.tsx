@@ -5,7 +5,6 @@ export default async function Home() {
 
     <div>
 
-      <InsuranceClaimForm />
 
     </div>
   );
