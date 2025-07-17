@@ -13,7 +13,6 @@ import {
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "@/components/mode-toggle";
-import UserSidebar from "@/components/UserSidebar";
 import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
@@ -46,6 +45,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Navbar />
 
             {children}
 

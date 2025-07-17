@@ -1,13 +1,12 @@
+import InsuranceClaimForm from "@/components/insurance-claim-form";
 export default async function Home() {
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      
-            
-            
-          <p>Please sign in or sign up.</p>
-        
-      
-    </main>
+
+    <div>
+
+      <InsuranceClaimForm />
+
+    </div>
   );
 }
