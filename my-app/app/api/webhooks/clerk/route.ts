@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Role } from "@prisma/client"; // Import the Role enum from Prisma Client
+import { Role } from "@prisma/client";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // FIX 1: Await the headers() function to get the actual headers object.
+  // Get the headers
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
@@ -27,11 +27,16 @@ export async function POST(req: Request) {
     });
   }
 
+  // Get the body
   const payload = await req.json();
   const body = JSON.stringify(payload);
+
+  // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
+
   let evt: WebhookEvent;
 
+  // Verify the payload with the headers
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -45,36 +50,89 @@ export async function POST(req: Request) {
     });
   }
 
+  // Get the type of event
   const eventType = evt.type;
 
-  if (eventType === "user.created") {
-    const { id, email_addresses, first_name, last_name, public_metadata } =
-      evt.data;
+  // Use a switch statement for cleaner handling of multiple events
+  switch (eventType) {
+    // CASE 1: User is created
+    case "user.created": {
+      const { id, email_addresses, first_name, last_name, public_metadata } =
+        evt.data;
 
-    // FIX 2: Robustly handle the role from metadata.
-    let role: Role = "USER"; // Default to USER
-    const roleFromClerk = public_metadata?.role as string; // Safely access the role
-
-    if (roleFromClerk) {
-      const upperCaseRole = roleFromClerk.toUpperCase();
-      // Check if the role from Clerk is a valid role in our enum
-      if (Object.values(Role).includes(upperCaseRole as Role)) {
-        role = upperCaseRole as Role;
+      // Validate and determine the user's role
+      let role: Role = "USER"; // Default role
+      const roleFromClerk = public_metadata?.role as string;
+      if (
+        roleFromClerk &&
+        Object.values(Role).includes(roleFromClerk.toUpperCase() as Role)
+      ) {
+        role = roleFromClerk.toUpperCase() as Role;
       }
+
+      await prisma.user.create({
+        data: {
+          clerkId: id,
+          email: email_addresses[0].email_address,
+          firstName: first_name,
+          lastName: last_name,
+          role: role,
+        },
+      });
+
+      return NextResponse.json({ message: "User created" }, { status: 201 });
     }
 
-    await prisma.user.create({
-      data: {
-        clerkId: id,
-        email: email_addresses[0].email_address,
-        firstName: first_name,
-        lastName: last_name,
-        role: role, // Use the validated and correctly typed role
-      },
-    });
+    // CASE 2: User is updated
+    case "user.updated": {
+      const { id, email_addresses, first_name, last_name, public_metadata } =
+        evt.data;
 
-    return NextResponse.json({ message: "User created" }, { status: 201 });
+      let role: Role = "USER";
+      const roleFromClerk = public_metadata?.role as string;
+      if (
+        roleFromClerk &&
+        Object.values(Role).includes(roleFromClerk.toUpperCase() as Role)
+      ) {
+        role = roleFromClerk.toUpperCase() as Role;
+      }
+
+      await prisma.user.update({
+        where: {
+          clerkId: id,
+        },
+        data: {
+          email: email_addresses[0].email_address,
+          firstName: first_name,
+          lastName: last_name,
+          role: role,
+        },
+      });
+
+      return NextResponse.json({ message: "User updated" }, { status: 200 });
+    }
+
+    // CASE 3: User is deleted
+    case "user.deleted": {
+      const { id } = evt.data;
+
+      // Ensure id is not undefined before proceeding
+      if (!id) {
+        return new Response("Error occured -- user ID missing in payload", {
+          status: 400,
+        });
+      }
+
+      await prisma.user.delete({
+        where: {
+          clerkId: id,
+        },
+      });
+
+      return NextResponse.json({ message: "User deleted" }, { status: 200 });
+    }
   }
 
+  // If the event type is not handled, return a 200 OK
   return new Response("", { status: 200 });
 }
