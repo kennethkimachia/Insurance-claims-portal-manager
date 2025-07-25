@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, Clock, CheckCircle, XCircle, Send, UserPlus, AlertTriangle, TrendingUp } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import Link from "next/link";
 
 // Mock data for pending claims
 const pendingClaims = [
@@ -172,10 +173,13 @@ export default function AgentDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Agent Dashboard</h1>
           <p className="text-muted-foreground">Manage users and process insurance claims</p>
         </div>
-        <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+        <Link href="/dashboard/agent/create-user">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
           <UserPlus className="w-4 h-4 mr-2" />
           Create User Account
         </Button>
+        </Link>
+
       </div>
 
       {/* Quick Stats */}

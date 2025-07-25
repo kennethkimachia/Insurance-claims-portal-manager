@@ -171,10 +171,12 @@ export function AgentSidebar() {
           <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-2 py-2 space-y-2">
+              <Link href = "/dashboard/agent/create-user">
               <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700" size="sm">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Create User
               </Button>
+              </Link>
               <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
                 <FileText className="w-4 h-4 mr-2" />
                 Generate Report
