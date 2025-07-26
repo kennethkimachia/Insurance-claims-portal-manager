@@ -1,10 +1,10 @@
 import React from 'react'
-import { CreateUserForm } from '@/components/CreateUserForm'
+import  InvitationForm  from '@/components/CreateUserForm'
 
 function page() {
   return (
     <div>
-        <CreateUserForm />
+        <InvitationForm />
     </div>
   )
 }
