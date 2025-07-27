@@ -8,6 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, Clock, CheckCircle, XCircle, Send, UserPlus, AlertTriangle, TrendingUp } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+
 
 // Mock data for pending claims
 const pendingClaims = [
@@ -164,7 +168,13 @@ function ClaimActions({ claimId }: { claimId: string }) {
   )
 }
 
-export default function AgentDashboard() {
+export default async function AgentDashboard() {
+  const {has} = await auth();
+
+  if(!has({role:"AGENT"})){
+    redirect("/")
+  }
+  
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Header */}
