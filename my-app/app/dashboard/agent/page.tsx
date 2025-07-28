@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -171,7 +169,7 @@ function ClaimActions({ claimId }: { claimId: string }) {
 export default async function AgentDashboard() {
   const {has} = await auth();
 
-  if(!has({role:"AGENT"})){
+  if(!has({role:"agent"})){
     redirect("/")
   }
   
