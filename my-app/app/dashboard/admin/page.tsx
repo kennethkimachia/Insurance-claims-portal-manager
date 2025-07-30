@@ -5,10 +5,9 @@ import { ROUTES } from "@/lib/routes";
 export default async function AdminDashboardPage() {
   const { orgRole } = await auth();
 
-  // Only allow 'admin' role to access this page.
-/*   if (orgRole !== "Admin") {
-    redirect(ROUTES.HOME); // Redirect non-admins away
-  } */
+  if (orgRole !== "org:admin") {
+    redirect(ROUTES.HOME); 
+  }
 
   return (
     <div>

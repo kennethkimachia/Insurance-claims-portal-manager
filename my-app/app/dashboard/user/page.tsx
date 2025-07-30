@@ -1,10 +1,11 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
 // Mock data for ongoing claims
 const ongoingClaims = [
@@ -118,7 +119,12 @@ function getStatusBadge(status: string) {
   }
 }
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const {orgRole} = await auth()
+
+  if(orgRole !== "org:member"){
+    redirect(ROUTES.HOME)
+  }
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Header */}

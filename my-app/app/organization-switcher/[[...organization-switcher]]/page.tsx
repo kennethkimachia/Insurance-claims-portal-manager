@@ -4,31 +4,33 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "lib/routes";
 
+// As requested, your organization ID is stored in a constant.
+const TARGET_ORGANIZATION_ID = "org_30W2wkVJwyQe1l79rGqtLY6qLGR";
+
 export default function OrgSelectionPage() {
-  // 1. Use Clerk's official hooks to get user data and control functions.
   const { user, isLoaded } = useUser();
   const { setActive } = useClerk();
   const router = useRouter();
 
   const handleSelectOrg = async (orgId: string) => {
-    // This should not happen, but it's a good safeguard.
     if (!setActive) return;
 
     try {
-      // 2. This is THE official Clerk function to update the session
-      //    and set the active organization. This is the core of the solution.
       await setActive({
         organization: orgId,
       });
 
-      // 3. After the session is activated, redirect the user.
-      //    We can now reliably check their role and send them to the right place.
       const membership = user?.organizationMemberships.find(
-        (m) => m.organization.id === orgId
+        (m) => m.organization.id === TARGET_ORGANIZATION_ID,
       );
 
+      // DEBUGGING: This will show you the exact membership object in the browser console.
+      // You can inspect it to see the correct 'role' string.
+      console.log("Selected Membership Info:", membership);
+
+      // UPDATED: Switched from "Admin" to "org:admin", which is Clerk's default.
       switch (membership?.role) {
-        case "admin":
+        case "org:admin":
           router.push(ROUTES.ADMIN_DASHBOARD);
           break;
         case "agent":
@@ -43,12 +45,14 @@ export default function OrgSelectionPage() {
     }
   };
 
-  // Show a loading state while Clerk initializes.
   if (!isLoaded) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
-  // If the user has only one organization, we can be smart and activate it for them.
   if (user?.organizationMemberships.length === 1) {
     const org = user.organizationMemberships[0];
     return (
@@ -71,7 +75,6 @@ export default function OrgSelectionPage() {
     );
   }
 
-  // If the user has multiple organizations, show them a list to choose from.
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="p-8 bg-white rounded-lg shadow-md text-center">

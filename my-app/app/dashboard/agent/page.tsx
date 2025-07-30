@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
 
 
@@ -167,11 +168,12 @@ function ClaimActions({ claimId }: { claimId: string }) {
 }
 
 export default async function AgentDashboard() {
-  const {has} = await auth();
-
-  if(!has({role:"agent"})){
-    redirect("/")
+  const {orgRole} = await auth();
+    if (orgRole !== "org:agent") {
+    redirect(ROUTES.HOME); 
   }
+
+
   
   return (
     <div className="flex-1 space-y-6 p-6">
