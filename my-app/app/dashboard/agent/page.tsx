@@ -169,9 +169,9 @@ function ClaimActions({ claimId }: { claimId: string }) {
 
 export default async function AgentDashboard() {
   const {orgRole} = await auth();
-    if (orgRole !== "org:agent") {
-    redirect(ROUTES.HOME); 
-  }
+    if (orgRole !== "org:agent" && orgRole !== "org:admin") {
+      redirect(ROUTES.HOME);
+    }
 
 
   

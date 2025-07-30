@@ -122,7 +122,7 @@ function getStatusBadge(status: string) {
 export default async function Dashboard() {
   const {orgRole} = await auth()
 
-  if(orgRole !== "org:member"){
+  if(orgRole !== "org:member" && orgRole !== "org:admin"){
     redirect(ROUTES.HOME)
   }
   return (
