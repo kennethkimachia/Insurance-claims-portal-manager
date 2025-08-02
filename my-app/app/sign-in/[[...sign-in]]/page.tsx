@@ -7,7 +7,6 @@ export default function SignInPage() {
     <div className="flex items-center justify-center min-h-screen">
       <SignIn
         path="/sign-in"
-        // UPDATED: Redirect to a neutral dashboard page first.
         afterSignInUrl="/organization-switcher"
       />
     </div>

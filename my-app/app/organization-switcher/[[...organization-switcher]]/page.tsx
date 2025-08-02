@@ -3,9 +3,8 @@
 import { useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "lib/routes";
-
-// As requested, your organization ID is stored in a constant.
-const TARGET_ORGANIZATION_ID = "org_30W2wkVJwyQe1l79rGqtLY6qLGR";
+import type { OrganizationMembershipResource } from "@clerk/types";
+import SessionResource from "@clerk/types"
 
 export default function OrgSelectionPage() {
   const { user, isLoaded } = useUser();
@@ -16,19 +15,20 @@ export default function OrgSelectionPage() {
     if (!setActive) return;
 
     try {
-      await setActive({
+      const newSession = await setActive({
         organization: orgId,
       });
 
-      const membership = user?.organizationMemberships.find(
-        (m) => m.organization.id === TARGET_ORGANIZATION_ID,
-      );
+      if (!newSession) {
+        console.error("Failed to set new session.");
+        return;
+      }
+      const membership: OrganizationMembershipResource | undefined =
+        newSession.user.organizationMemberships.find(
+          (m: OrganizationMembershipResource) => m.organization.id === orgId,
+        );
 
-      // DEBUGGING: This will show you the exact membership object in the browser console.
-      // You can inspect it to see the correct 'role' string.
       console.log("Selected Membership Info:", membership);
-
-      // UPDATED: Switched from "Admin" to "org:admin", which is Clerk's default.
       switch (membership?.role) {
         case "org:admin":
           router.push(ROUTES.ADMIN_DASHBOARD);

@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,11 +10,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums for defining roles, claim statuses, and policy types
 enum Role {
   ADMIN
   AGENT
-  USER
+  USER // Represents a policyholder
 }
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PolicyType {
+  MOTOR
+  BURGLARY
+  // Add other policy types as needed
+}
+
+enum ClaimType {
+  MOTOR
+  BURGLARY
+}
+
+// User model linked to Clerk for authentication
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique // Foreign key for Clerk User
@@ -25,49 +42,71 @@ model User {
   firstName String?
   lastName  String?
   role      Role     @default(USER)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // A user can have multiple policies
+  policies Policy[]
 }
 
-// General claim information provided by the policyholder
-model Claims {
-  id            Int      @id @default(autoincrement())
-  name          String?
-  policy_number Int      @unique
-  address       String?
-  po_box        Int
-  occupation    String?
-  telephone     String?  @unique
+// Policy model representing an insurance policy held by a user
+model Policy {
+  id            Int        @id @default(autoincrement())
+  policy_number String     @unique
+  type          PolicyType
+  start_date    DateTime
+  end_date      DateTime
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  // A claim can be one of these types.
-  motor_claim    Motor_Claims?
-  burglary_claim Burglary_Claims?
+  // Many-to-one relationship with the User model
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  // A policy can have multiple claims
+  claims Claim[]
+}
+
+// General claim information
+model Claim {
+  id        Int         @id @default(autoincrement())
+  status    ClaimStatus @default(PENDING)
+  claim_type ClaimType
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Many-to-one relationship with the Policy model
+  policy   Policy @relation(fields: [policyId], references: [id])
+  policyId Int
+
+  // A claim can be one of these types
+  motor_claim    MotorClaim?
+  burglary_claim BurglaryClaim?
 }
 
 // Specific details for a motor vehicle insurance claim
-model Motor_Claims {
+model MotorClaim {
   id                        Int      @id @default(autoincrement())
-  // Establishes a one-to-one relationship with the Claims model
-  claim                     Claims   @relation(fields: [claim_id], references: [id])
+  // One-to-one relationship with the Claim model
+  claim                     Claim    @relation(fields: [claim_id], references: [id])
   claim_id                  Int      @unique
 
   // --- Incident Details ---
   date_of_accident          DateTime
   location_of_accident      String
-  description_of_accident   String   @db.Text // Use Text for potentially long descriptions
+  description_of_accident   String   @db.Text
 
   // --- Vehicle & Driver Details ---
   vehicle_make              String
   vehicle_model             String
   vehicle_year              Int
-  vehicle_registration_no   String   @unique
-  driver_name               String   // Name of the person driving at the time
+  vehicle_registration_no   String
+  driver_name               String
   driver_license_no         String
 
   // --- Third-Party & Police Details ---
   third_party_involved      Boolean  @default(false)
-  third_party_details       String?  // Simple text field for other party's info
+  third_party_details       String?
   police_report_filed       Boolean  @default(false)
   police_station            String?
   police_report_number      String?
@@ -78,15 +117,15 @@ model Motor_Claims {
 }
 
 // Specific details for a burglary insurance claim
-model Burglary_Claims {
+model BurglaryClaim {
   id                        Int         @id @default(autoincrement())
-  // Establishes a one-to-one relationship with the Claims model
-  claim                     Claims      @relation(fields: [claim_id], references: [id])
+  // One-to-one relationship with the Claim model
+  claim                     Claim       @relation(fields: [claim_id], references: [id])
   claim_id                  Int         @unique
 
   // --- Incident Details ---
-  date_of_loss              DateTime // When the burglary is believed to have occurred
-  date_of_discovery         DateTime // When the policyholder discovered the burglary
+  date_of_loss              DateTime
+  date_of_discovery         DateTime
   description_of_incident   String      @db.Text
 
   // --- Police Report ---
@@ -99,21 +138,20 @@ model Burglary_Claims {
   damage_description        String?     @db.Text
   estimated_repair_cost     Decimal?
 
-  // --- Stolen Items ---
-  // Establishes a one-to-many relationship with the Stolen_Item model
-  stolen_items              Stolen_Item[]
+  // One-to-many relationship with the StolenItem model
+  stolen_items              StolenItem[]
 }
 
 // A separate model to list items stolen during a burglary
-model Stolen_Item {
-  id                        Int             @id @default(autoincrement())
-  // Establishes a many-to-one relationship back to Burglary_Claims
-  burglary_claim            Burglary_Claims @relation(fields: [burglary_claim_id], references: [id])
+model StolenItem {
+  id                        Int           @id @default(autoincrement())
+  // Many-to-one relationship back to BurglaryClaim
+  burglary_claim            BurglaryClaim @relation(fields: [burglary_claim_id], references: [id])
   burglary_claim_id         Int
 
   // --- Item Details ---
   item_name                 String
-  item_description          String?         @db.Text
+  item_description          String?       @db.Text
   purchase_date             DateTime?
   estimated_value           Decimal
 }
