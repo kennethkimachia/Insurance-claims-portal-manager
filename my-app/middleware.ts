@@ -16,7 +16,8 @@ const isProtectedRoute = createRouteMatcher([
   `${ROUTES.AGENT_DASHBOARD}(.*)`,
   `${ROUTES.USER_DASHBOARD}(.*)`,
   `${ROUTES.ORG_SELECTION}(.*)`,
-  "/",
+  `${ROUTES.INVITATION_FORM}`,
+  `${ROUTES.HOME}`,
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

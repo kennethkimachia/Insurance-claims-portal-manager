@@ -120,11 +120,11 @@ function getStatusBadge(status: string) {
 }
 
 export default async function Dashboard() {
-  const {orgRole} = await auth()
+/*   const {orgRole} = await auth()
 
   if(orgRole !== "org:member" && orgRole !== "org:admin"){
     redirect(ROUTES.HOME)
-  }
+  } */
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Header */}

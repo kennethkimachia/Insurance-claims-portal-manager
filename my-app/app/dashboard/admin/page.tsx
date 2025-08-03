@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 
 export default async function AdminDashboardPage() {
-  const { orgRole } = await auth();
+/*   const { orgRole } = await auth();
 
   if (orgRole !== "org:admin") {
     redirect(ROUTES.HOME); 
-  }
+  } */
 
   return (
     <div>
