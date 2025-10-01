@@ -2,7 +2,7 @@ declare global {
 
   interface ClerkAuthorization{
     permission: ''
-    role: 'org:admin' | 'org"agent' | 'org:member'
+    role: 'org:admin' | 'org:agent' | 'org:member'
   }
 
 }
