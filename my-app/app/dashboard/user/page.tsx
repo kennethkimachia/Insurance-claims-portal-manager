@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 import { UserSidebar } from "@/components/UserSidebar"
+import Link from "next/link"
 
 // Mock data for ongoing claims
 const ongoingClaims = [
@@ -129,10 +130,13 @@ export default async function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Claims Dashboard</h1>
           <p className="text-muted-foreground">Manage your insurance claims and track their progress</p>
         </div>
+        <Link href="/claim-form">
         <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
           Create New Claim
-        </Button>
+        </Button>        
+        </Link>
+
       </div>
 
       {/* Quick Stats */}

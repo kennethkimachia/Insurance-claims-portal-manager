@@ -75,18 +75,6 @@ export function UserSidebar() {
         </SidebarGroup>
 
         <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <div className="px-2 py-2">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                New Claim
-              </Button>
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
