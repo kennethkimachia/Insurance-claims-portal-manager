@@ -1,63 +1,58 @@
-// middleware.ts
-
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { ROUTES } from "./lib/routes"; // Import our routes
+import { ROUTES } from "./lib/routes";
 
 const isPublicRoute = createRouteMatcher([
   `${ROUTES.SIGN_IN}(.*)`,
   `${ROUTES.SIGN_UP}(.*)`,
   "/api/webhooks/clerk",
-
 ]);
 
 const isProtectedRoute = createRouteMatcher([
   `${ROUTES.ADMIN_DASHBOARD}(.*)`,
   `${ROUTES.AGENT_DASHBOARD}(.*)`,
   `${ROUTES.USER_DASHBOARD}(.*)`,
-  `${ROUTES.ORG_SELECTION}(.*)`,
   `${ROUTES.INVITATION_FORM}`,
   `${ROUTES.HOME}`,
 ]);
 
+const onAdminDashboard = createRouteMatcher([`${ROUTES.ADMIN_DASHBOARD}(.*)`]);
+const onAgentDashboard = createRouteMatcher([`${ROUTES.AGENT_DASHBOARD}(.*)`]);
+const onUserDashboard  = createRouteMatcher([`${ROUTES.USER_DASHBOARD}(.*)`]);
+
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, orgId, orgRole } = await auth();
+  const { userId, has, redirectToSignIn } = await auth();
+  const url = req.nextUrl;
 
-  // 1. If the user is logged out and trying to access a protected route,
-  //    redirect them to the sign-in page.
+  if (isPublicRoute(req)) return NextResponse.next();
+
   if (!userId && isProtectedRoute(req)) {
-    const signInUrl = new URL(ROUTES.SIGN_IN, req.url);
-    signInUrl.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signInUrl);
+    return redirectToSignIn({ returnBackUrl: req.url });
   }
 
-  // 2. If the user is logged in but has NO active organization,
-  //    AND they are trying to access a protected route,
-  //    force them to the organization selection page.
-  if (userId && !orgId && isProtectedRoute(req)) {
-    const orgSelectionUrl = new URL(ROUTES.ORG_SELECTION, req.url);
-    return NextResponse.redirect(orgSelectionUrl);
-  }
+  if (userId) {
+    const isAdmin  = has({ role: "org:admin" });
+    const isAgent  = has({ role: "org:agent" });
+    const isMember = has({ role: "org:member" }); 
 
-  // 3. If the user IS logged in and tries to visit a public route,
-  //    redirect them to their specific dashboard based on their role.
-  if (userId && isPublicRoute(req)) {
-    let path = ROUTES.ORG_SELECTION; // Default path
+    const roleDashboard = isAdmin
+      ? ROUTES.ADMIN_DASHBOARD
+      : isAgent
+      ? ROUTES.AGENT_DASHBOARD
+      : ROUTES.USER_DASHBOARD;
 
-    switch (orgRole) {
-      case "admin":
-        path = ROUTES.ADMIN_DASHBOARD;
-        break;
-      case "agent":
-        path = ROUTES.AGENT_DASHBOARD;
-        break;
-      case "user":
-        path = ROUTES.USER_DASHBOARD;
-        break;
+    if (url.pathname === "/" || url.pathname === ROUTES.HOME) {
+      const dest = new URL(roleDashboard, req.url);
+      if (dest.pathname !== url.pathname) return NextResponse.redirect(dest);
     }
 
-    const absoluteUrl = new URL(path, req.url);
-    return NextResponse.redirect(absoluteUrl);
+    if (onAdminDashboard(req) && !isAdmin) {
+      return NextResponse.redirect(new URL(roleDashboard, req.url));
+    }
+    if (onAgentDashboard(req) && !(isAgent || isAdmin)) {
+      return NextResponse.redirect(new URL(roleDashboard, req.url));
+    }
+ 
   }
 
   return NextResponse.next();
@@ -65,6 +60,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
+    // Everything except static files and Next internals
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
