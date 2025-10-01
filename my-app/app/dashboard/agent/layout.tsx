@@ -11,7 +11,7 @@ export default function AgentLayout({
 }) {
   return (
     <SidebarProvider>
-      <AgentSidebar />
+        <AgentSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 justify-between">
           <SidebarTrigger className="-ml-1" />
