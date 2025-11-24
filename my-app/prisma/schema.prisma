@@ -75,6 +75,13 @@ model Claim {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  // General Info from Form
+  claimant_name String?
+  address       String?
+  po_box        String?
+  occupation    String?
+  telephone     String?
+
   // Many-to-one relationship with the Policy model
   policy   Policy @relation(fields: [policyId], references: [id])
   policyId Int

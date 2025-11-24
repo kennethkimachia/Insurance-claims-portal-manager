@@ -27,8 +27,7 @@ export async function POST(req: Request) {
   }
 
 
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
+  const body = await req.text();
   const wh = new Webhook(WEBHOOK_SECRET);
 
   let evt: WebhookEvent;
@@ -69,7 +68,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      await prisma.user.upsert({
+      const user = await prisma.user.upsert({
         where: { clerkId: clerkId },
         update: {
           email: email_addresses[0].email_address,
@@ -87,6 +86,44 @@ export async function POST(req: Request) {
       });
 
       console.log(`Successfully upserted user ${clerkId} in the database.`);
+
+      // Ensure user has both MOTOR and BURGLARY policies
+      const existingMotorPolicy = await prisma.policy.findFirst({
+        where: { userId: user.id, type: "MOTOR" }
+      });
+
+      if (!existingMotorPolicy) {
+        const motorPolicyNumber = `POL-M-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)}`;
+        await prisma.policy.create({
+          data: {
+            policy_number: motorPolicyNumber,
+            type: "MOTOR",
+            start_date: new Date(),
+            end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            userId: user.id,
+          },
+        });
+        console.log(`Created MOTOR policy ${motorPolicyNumber} for user ${user.id}`);
+      }
+
+      const existingBurglaryPolicy = await prisma.policy.findFirst({
+        where: { userId: user.id, type: "BURGLARY" }
+      });
+
+      if (!existingBurglaryPolicy) {
+        const burglaryPolicyNumber = `POL-B-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)}`;
+        await prisma.policy.create({
+          data: {
+            policy_number: burglaryPolicyNumber,
+            type: "BURGLARY",
+            start_date: new Date(),
+            end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            userId: user.id,
+          },
+        });
+        console.log(`Created BURGLARY policy ${burglaryPolicyNumber} for user ${user.id}`);
+      }
+
     } catch (error) {
       console.error('Error during database operation:', error);
       return new NextResponse('Error: Could not process user in database', {

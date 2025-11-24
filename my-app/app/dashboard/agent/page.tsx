@@ -6,45 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, Clock, CheckCircle, XCircle, Send, UserPlus, AlertTriangle, TrendingUp } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { ROUTES } from "@/lib/routes";
+import { prisma } from "@/lib/prisma";
 
+// Mock data for pending claims removed
 
-
-// Mock data for pending claims
-const pendingClaims = [
-  {
-    id: "CLM-2024-001",
-    policyHolder: "John Doe",
-    policyNumber: "POL-2024-001",
-    type: "Auto Accident",
-    dateSubmitted: "2024-01-15",
-    amount: "$2,500.00",
-    priority: "High",
-    description: "Rear-end collision on Highway 101",
-  },
-  {
-    id: "CLM-2024-002",
-    policyHolder: "Jane Smith",
-    policyNumber: "POL-2024-002",
-    type: "Property Damage",
-    dateSubmitted: "2024-01-14",
-    amount: "$1,200.00",
-    priority: "Medium",
-    description: "Water damage from burst pipe",
-  },
-  {
-    id: "CLM-2024-003",
-    policyHolder: "Mike Johnson",
-    policyNumber: "POL-2024-003",
-    type: "Medical",
-    dateSubmitted: "2024-01-13",
-    amount: "$850.00",
-    priority: "Low",
-    description: "Emergency room visit",
-  },
-]
 
 // Mock data for processed claims
 const processedClaims = [
@@ -168,13 +133,31 @@ function ClaimActions({ claimId }: { claimId: string }) {
 }
 
 export default async function AgentDashboard() {
-/*   const {orgRole} = await auth();
-    if (orgRole !== "org:agent" && orgRole !== "org:admin") {
-      redirect(ROUTES.HOME);
-    } */
+  const dbPendingClaims = await prisma.claim.findMany({
+    where: { status: "PENDING" },
+    include: {
+      policy: true,
+      motor_claim: true,
+      burglary_claim: true
+    },
+    orderBy: { createdAt: "desc" }
+  })
 
+  const pendingClaims = dbPendingClaims.map(claim => ({
+    id: claim.id.toString(),
+    policyHolder: claim.claimant_name || "Unknown",
+    policyNumber: claim.policy.policy_number,
+    type: claim.claim_type === "MOTOR" ? "Motor Claim" : "Burglary Claim",
+    dateSubmitted: claim.createdAt.toLocaleDateString(),
+    amount: claim.claim_type === "MOTOR" 
+      ? `$${claim.motor_claim?.estimated_repair_cost?.toString() || "0"}`
+      : `$${claim.burglary_claim?.estimated_repair_cost?.toString() || "0"}`,
+    priority: "Medium", // Default
+    description: claim.claim_type === "MOTOR"
+      ? claim.motor_claim?.description_of_accident || ""
+      : claim.burglary_claim?.description_of_incident || ""
+  }))
 
-  
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Header */}

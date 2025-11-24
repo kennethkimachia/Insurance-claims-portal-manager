@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { CalendarIcon, Car, Shield, Trash2, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { createClaim } from "@/lib/actions/claim.actions"
 
 interface GeneralInfo {
   name: string
@@ -73,6 +75,8 @@ interface BurglaryClaimDetails {
 }
 
 export default function InsuranceClaimForm() {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [claimType, setClaimType] = useState<"motor" | "burglary" | null>(null)
   const [generalInfo, setGeneralInfo] = useState<GeneralInfo>({
@@ -163,14 +167,30 @@ export default function InsuranceClaimForm() {
     }))
   }
 
-  const handleSubmitClaim = () => {
-    // Handle form submission here
-    console.log("Claim submitted:", {
-      claimType,
-      generalInfo,
-      ...(claimType === "motor" ? { motorDetails } : { burglaryDetails }),
-    })
-    alert("Claim submitted successfully!")
+  const handleSubmitClaim = async () => {
+    if (!claimType) return
+
+    setIsSubmitting(true)
+    try {
+      const result = await createClaim({
+        claimType,
+        generalInfo,
+        motorDetails: claimType === "motor" ? motorDetails : undefined,
+        burglaryDetails: claimType === "burglary" ? burglaryDetails : undefined,
+      })
+
+      if (result.success) {
+        alert("Claim submitted successfully!")
+        router.push("/dashboard/user")
+      } else {
+        alert(result.message || "Failed to submit claim")
+      }
+    } catch (error) {
+      console.error(error)
+      alert("An error occurred while submitting the claim")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const DatePicker = ({
@@ -520,7 +540,9 @@ export default function InsuranceClaimForm() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSubmitClaim}>Submit Claim</Button>
+                  <Button onClick={handleSubmitClaim} disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Claim"}
+                  </Button>
                 </div>
               </div>
             )}
@@ -730,7 +752,9 @@ export default function InsuranceClaimForm() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSubmitClaim}>Submit Claim</Button>
+                  <Button onClick={handleSubmitClaim} disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Claim"}
+                  </Button>
                 </div>
               </div>
             )}
