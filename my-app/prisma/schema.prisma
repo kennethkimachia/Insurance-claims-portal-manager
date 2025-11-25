@@ -21,6 +21,7 @@ enum ClaimStatus {
   PENDING
   APPROVED
   REJECTED
+  CLOSED
 }
 
 enum PolicyType {
@@ -47,6 +48,7 @@ model User {
 
   // A user can have multiple policies
   policies Policy[]
+  processedClaims Claim[] @relation("ProcessedBy")
 }
 
 // Policy model representing an insurance policy held by a user
@@ -72,6 +74,7 @@ model Claim {
   id        Int         @id @default(autoincrement())
   status    ClaimStatus @default(PENDING)
   claim_type ClaimType
+  rejection_reason String?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -85,10 +88,22 @@ model Claim {
   // Many-to-one relationship with the Policy model
   policy   Policy @relation(fields: [policyId], references: [id])
   policyId Int
+  
+  agent    User?   @relation("ProcessedBy", fields: [agentId], references: [id])
+  agentId  String?
 
   // A claim can be one of these types
   motor_claim    MotorClaim?
   burglary_claim BurglaryClaim?
+  progressSteps  ClaimProgress[]
+}
+model ClaimProgress {
+  id          Int      @id @default(autoincrement())
+  claim       Claim    @relation(fields: [claimId], references: [id])
+  claimId     Int
+  title       String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
 }
 
 // Specific details for a motor vehicle insurance claim

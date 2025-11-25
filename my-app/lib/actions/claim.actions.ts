@@ -65,13 +65,15 @@ export async function createClaim(data: {
   }
 
   try {
+    console.log("Validating policy for user:", userId, "Policy:", data.generalInfo.policy_number);
+
     const policy = await prisma.policy.findFirst({
       where: { 
-        policy_number: data.generalInfo.policy_number,
-        /*I need to fix this issue. The policy number validation is not working.
-        Each form needs to get the userID of the person submitting the form. This way it is able to 
-        check the policy number of that user using the userID */
-        type: data.claimType === "motor" ? "MOTOR" : "BURGLARY"
+        policy_number: data.generalInfo.policy_number.trim(),
+        type: data.claimType === "motor" ? "MOTOR" : "BURGLARY",
+        user: {
+          clerkId: userId,
+        },
       },
     })
 

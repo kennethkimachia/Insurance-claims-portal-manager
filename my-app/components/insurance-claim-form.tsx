@@ -312,7 +312,7 @@ export default function InsuranceClaimForm() {
                     <Label htmlFor="policy_number">Policy Number</Label>
                     <Input
                       id="policy_number"
-                      type="number"
+                      type="text"
                       value={generalInfo.policy_number}
                       onChange={(e) => setGeneralInfo((prev) => ({ ...prev, policy_number: e.target.value }))}
                     />

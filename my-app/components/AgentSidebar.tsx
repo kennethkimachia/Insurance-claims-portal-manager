@@ -11,6 +11,7 @@ import {
   CheckCircle,
   UserPlus,
   MessageSquare,
+
 } from "lucide-react"
 import Link from "next/link"
 
@@ -57,34 +58,14 @@ const navigationItems = [
 
 const userManagementItems = [
   {
-    title: "All Users",
-    url: "/agent/users",
-    icon: Users,
+    title: "Profile",
+    url: "/agent/profile",
+    icon: User,
   },
-  {
-    title: "Create User",
-    url: "/agent/users/create",
-    icon: UserPlus,
-  },
+
 ]
 
-const systemItems = [
-  {
-    title: "Reports",
-    url: "/agent/reports",
-    icon: BarChart3,
-  },
-  {
-    title: "Messages",
-    url: "/agent/messages",
-    icon: MessageSquare,
-  },
-  {
-    title: "Settings",
-    url: "/agent/settings",
-    icon: Settings,
-  },
-]
+
 
 export function AgentSidebar() {
   return (
@@ -144,49 +125,9 @@ export function AgentSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
         <SidebarSeparator />
 
-        <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <div className="px-2 py-2 space-y-2">
-              <Link href = "/dashboard/agent/create-user">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700" size="sm">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Create User
-              </Button>
-              </Link>
-              <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
-                <FileText className="w-4 h-4 mr-2" />
-                Generate Report
-              </Button>
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
-
-     
     </Sidebar>
   )
 }

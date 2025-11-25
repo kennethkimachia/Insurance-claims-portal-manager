@@ -1,162 +1,80 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, FileText, Clock, CheckCircle, XCircle, Send, UserPlus, AlertTriangle, TrendingUp } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Clock, CheckCircle, AlertTriangle, TrendingUp, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ClaimActionCell } from "@/components/agent/claim-action-cell"; 
+import { AgentProgressManager } from "@/components/agent/agent-progress-manager"; // Imported the new component
+import { format } from "date-fns";
 
-// Mock data for pending claims removed
-
-
-// Mock data for processed claims
-const processedClaims = [
-  {
-    id: "CLM-2024-004",
-    policyHolder: "Sarah Wilson",
-    policyNumber: "POL-2024-004",
-    type: "Home Insurance",
-    dateSubmitted: "2024-01-10",
-    dateProcessed: "2024-01-12",
-    amount: "$3,200.00",
-    status: "Approved",
-    action: "Forwarded to Insurance Co.",
-    agent: "You",
-  },
-  {
-    id: "CLM-2024-005",
-    policyHolder: "Robert Brown",
-    policyNumber: "POL-2024-005",
-    type: "Auto Accident",
-    dateSubmitted: "2024-01-08",
-    dateProcessed: "2024-01-11",
-    amount: "$1,800.00",
-    status: "Rejected",
-    action: "Insufficient Documentation",
-    agent: "You",
-  },
-]
-
-// Mock data for users
-const users = [
-  {
-    id: "USR-001",
-    name: "John Doe",
-    email: "john.doe@email.com",
-    policyNumber: "POL-2024-001",
-    dateCreated: "2024-01-01",
-    status: "Active",
-    claimsCount: 2,
-  },
-  {
-    id: "USR-002",
-    name: "Jane Smith",
-    email: "jane.smith@email.com",
-    policyNumber: "POL-2024-002",
-    dateCreated: "2024-01-02",
-    status: "Active",
-    claimsCount: 1,
-  },
-  {
-    id: "USR-003",
-    name: "Mike Johnson",
-    email: "mike.johnson@email.com",
-    policyNumber: "POL-2024-003",
-    dateCreated: "2024-01-03",
-    status: "Inactive",
-    claimsCount: 3,
-  },
-]
-
-function getPriorityBadge(priority: string) {
-  switch (priority) {
-    case "High":
-      return <Badge variant="destructive">{priority}</Badge>
-    case "Medium":
-      return <Badge variant="secondary">{priority}</Badge>
-    case "Low":
-      return <Badge variant="outline">{priority}</Badge>
-    default:
-      return <Badge variant="outline">{priority}</Badge>
-  }
-}
-
+// Helper for status badges
 function getStatusBadge(status: string) {
   switch (status) {
-    case "Active":
-      return (
-        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-          Active
-        </Badge>
-      )
-    case "Inactive":
-      return <Badge variant="secondary">Inactive</Badge>
-    case "Approved":
-      return (
-        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-          Approved
-        </Badge>
-      )
-    case "Rejected":
-      return <Badge variant="destructive">Rejected</Badge>
+    case "APPROVED":
+      return <Badge className="bg-green-600">Approved</Badge>;
+    case "REJECTED":
+      return <Badge variant="destructive">Rejected</Badge>;
+    case "CLOSED":
+      return <Badge variant="outline">Closed</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>
+      return <Badge variant="outline">Pending</Badge>;
   }
-}
-
-function ClaimActions({ claimId }: { claimId: string }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          Actions
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem className="text-green-600">
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Approve & Forward
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-red-600">
-          <XCircle className="w-4 h-4 mr-2" />
-          Reject Claim
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Send className="w-4 h-4 mr-2" />
-          Request More Info
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 export default async function AgentDashboard() {
-  const dbPendingClaims = await prisma.claim.findMany({
+  // 1. Fetch Pending Claims
+  const pendingClaims = await prisma.claim.findMany({
     where: { status: "PENDING" },
     include: {
       policy: true,
       motor_claim: true,
-      burglary_claim: true
+      burglary_claim: true,
     },
-    orderBy: { createdAt: "desc" }
-  })
+    orderBy: { createdAt: "desc" },
+  });
 
-  const pendingClaims = dbPendingClaims.map(claim => ({
-    id: claim.id.toString(),
-    policyHolder: claim.claimant_name || "Unknown",
-    policyNumber: claim.policy.policy_number,
-    type: claim.claim_type === "MOTOR" ? "Motor Claim" : "Burglary Claim",
-    dateSubmitted: claim.createdAt.toLocaleDateString(),
-    amount: claim.claim_type === "MOTOR" 
-      ? `$${claim.motor_claim?.estimated_repair_cost?.toString() || "0"}`
-      : `$${claim.burglary_claim?.estimated_repair_cost?.toString() || "0"}`,
-    priority: "Medium", // Default
-    description: claim.claim_type === "MOTOR"
-      ? claim.motor_claim?.description_of_accident || ""
-      : claim.burglary_claim?.description_of_incident || ""
-  }))
+  // 2. Fetch Processed Claims (Approved or Rejected)
+  const processedClaims = await prisma.claim.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "REJECTED", "CLOSED"],
+      },
+    },
+    include: {
+      policy: true,
+      motor_claim: true,
+      burglary_claim: true,
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 10, // Limit to recent 10
+  });
+
+  // 3. Fetch Users
+  const usersRaw = await prisma.user.findMany({
+    where: { role: "USER" },
+    include: {
+      _count: {
+        select: { policies: true } 
+      },
+      policies: {
+        select: {
+          _count: {
+            select: { claims: true } 
+          }
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  // Calculate total claims per user in Javascript
+  const users = usersRaw.map(user => ({
+    ...user,
+    totalClaims: user.policies.reduce((sum, policy) => sum + policy._count.claims, 0)
+  }));
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -167,12 +85,11 @@ export default async function AgentDashboard() {
           <p className="text-muted-foreground">Manage users and process insurance claims</p>
         </div>
         <Link href="/dashboard/agent/create-user">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Create User Account
-        </Button>
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Create User Account
+          </Button>
         </Link>
-
       </div>
 
       {/* Quick Stats */}
@@ -187,39 +104,44 @@ export default async function AgentDashboard() {
             <p className="text-xs text-muted-foreground">Awaiting review</p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processed Today</CardTitle>
+            <CardTitle className="text-sm font-medium">Processed Total</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+            <div className="text-2xl font-bold">{processedClaims.length}</div>
+            <p className="text-xs text-muted-foreground">All time processed</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.filter((u) => u.status === "Active").length}</div>
-            <p className="text-xs text-muted-foreground">Total registered users</p>
+            <div className="text-2xl font-bold">{users.length}</div>
+            <p className="text-xs text-muted-foreground">Total registered policyholders</p>
           </CardContent>
         </Card>
+        
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Priority</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingClaims.filter((c) => c.priority === "High").length}</div>
-            <p className="text-xs text-muted-foreground">Urgent claims</p>
-          </CardContent>
-        </Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Motor vs Burglary</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-sm font-medium">
+                   M: {pendingClaims.filter(c => c.claim_type === "MOTOR").length} | 
+                   B: {pendingClaims.filter(c => c.claim_type === "BURGLARY").length}
+                </div>
+              <p className="text-xs text-muted-foreground">Pending Breakdown</p>
+            </CardContent>
+          </Card>
       </div>
 
-      {/* Main Content Tabs */}
       <Tabs defaultValue="claims" className="space-y-4">
         <TabsList>
           <TabsTrigger value="claims">Claims Management</TabsTrigger>
@@ -227,14 +149,14 @@ export default async function AgentDashboard() {
         </TabsList>
 
         <TabsContent value="claims" className="space-y-4">
-          {/* Pending Claims */}
+          
+          {/* PENDING CLAIMS TABLE */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 Pending Claims Review
               </CardTitle>
-              <CardDescription>Claims submitted by policy holders awaiting your review</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -244,27 +166,29 @@ export default async function AgentDashboard() {
                     <TableHead>Policy Holder</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Date Submitted</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Priority</TableHead>
+                    <TableHead>Amount Est.</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {pendingClaims.length === 0 && (
+                     <TableRow><TableCell colSpan={6} className="text-center py-4">No pending claims found.</TableCell></TableRow>
+                  )}
                   {pendingClaims.map((claim) => (
                     <TableRow key={claim.id}>
-                      <TableCell className="font-medium">{claim.id}</TableCell>
+                      <TableCell className="font-medium">#{claim.id}</TableCell>
                       <TableCell>
-                        <div>
-                          <div className="font-medium">{claim.policyHolder}</div>
-                          <div className="text-sm text-muted-foreground">{claim.policyNumber}</div>
-                        </div>
+                        <div className="font-medium">{claim.claimant_name}</div>
+                        <div className="text-sm text-muted-foreground">{claim.policy.policy_number}</div>
                       </TableCell>
-                      <TableCell>{claim.type}</TableCell>
-                      <TableCell>{claim.dateSubmitted}</TableCell>
-                      <TableCell>{claim.amount}</TableCell>
-                      <TableCell>{getPriorityBadge(claim.priority)}</TableCell>
+                      <TableCell>{claim.claim_type}</TableCell>
+                      <TableCell>{format(claim.createdAt, "MMM d, yyyy")}</TableCell>
                       <TableCell>
-                        <ClaimActions claimId={claim.id} />
+                        ${claim.motor_claim?.estimated_repair_cost?.toString() || 
+                          claim.burglary_claim?.estimated_repair_cost?.toString() || "0"}
+                      </TableCell>
+                      <TableCell>
+                        <ClaimActionCell claimId={claim.id} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -273,14 +197,13 @@ export default async function AgentDashboard() {
             </CardContent>
           </Card>
 
-          {/* Recently Processed Claims */}
+          {/* PROCESSED CLAIMS TABLE */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
                 Recently Processed Claims
               </CardTitle>
-              <CardDescription>Claims you have recently reviewed and processed</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -290,26 +213,28 @@ export default async function AgentDashboard() {
                     <TableHead>Policy Holder</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Date Processed</TableHead>
-                    <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Action Taken</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Update Progress</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {processedClaims.map((claim) => (
                     <TableRow key={claim.id}>
-                      <TableCell className="font-medium">{claim.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{claim.policyHolder}</div>
-                          <div className="text-sm text-muted-foreground">{claim.policyNumber}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{claim.type}</TableCell>
-                      <TableCell>{claim.dateProcessed}</TableCell>
-                      <TableCell>{claim.amount}</TableCell>
+                      <TableCell className="font-medium">#{claim.id}</TableCell>
+                      <TableCell>{claim.claimant_name}</TableCell>
+                      <TableCell>{claim.claim_type}</TableCell>
+                      <TableCell>{format(claim.updatedAt, "MMM d, yyyy")}</TableCell>
                       <TableCell>{getStatusBadge(claim.status)}</TableCell>
-                      <TableCell className="text-sm">{claim.action}</TableCell>
+                      <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                        {claim.rejection_reason || "Approved"}
+                      </TableCell>
+                      <TableCell>
+                          {/* Only show Progress Manager if the claim is Approved */}
+                          {claim.status === "APPROVED" && (
+                              <AgentProgressManager claimId={claim.id} />
+                          )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -319,60 +244,29 @@ export default async function AgentDashboard() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
-          {/* User Management */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                User Accounts
-              </CardTitle>
-              <CardDescription>Manage policy holder accounts and create new users</CardDescription>
+              <CardTitle>User Accounts</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Policy Number</TableHead>
-                    <TableHead>Date Created</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Policies</TableHead>
                     <TableHead>Claims</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>Joined</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.id}</TableCell>
-                      <TableCell>{user.name}</TableCell>
+                      <TableCell>{user.firstName} {user.lastName}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.policyNumber}</TableCell>
-                      <TableCell>{user.dateCreated}</TableCell>
-                      <TableCell>{getStatusBadge(user.status)}</TableCell>
-                      <TableCell>{user.claimsCount}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Users className="w-4 h-4 mr-2" />
-                              View Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <FileText className="w-4 h-4 mr-2" />
-                              View Claims
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>Edit Account</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      <TableCell>{user._count.policies}</TableCell>
+                      <TableCell>{user.totalClaims}</TableCell>
+                      <TableCell>{format(user.createdAt, "MMM d, yyyy")}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -382,5 +276,5 @@ export default async function AgentDashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
