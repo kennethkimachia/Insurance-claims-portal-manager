@@ -47,8 +47,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // A user can have multiple policies
-  policies Policy[]
-  processedClaims Claim[] @relation("ProcessedBy")
+  policies        Policy[]
+  processedClaims Claim[]  @relation("ProcessedBy")
 }
 
 // Policy model representing an insurance policy held by a user
@@ -71,12 +71,12 @@ model Policy {
 
 // General claim information
 model Claim {
-  id        Int         @id @default(autoincrement())
-  status    ClaimStatus @default(PENDING)
-  claim_type ClaimType
+  id               Int         @id @default(autoincrement())
+  status           ClaimStatus @default(PENDING)
+  claim_type       ClaimType
   rejection_reason String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   // General Info from Form
   claimant_name String?
@@ -88,15 +88,16 @@ model Claim {
   // Many-to-one relationship with the Policy model
   policy   Policy @relation(fields: [policyId], references: [id])
   policyId Int
-  
-  agent    User?   @relation("ProcessedBy", fields: [agentId], references: [id])
-  agentId  String?
+
+  agent   User?   @relation("ProcessedBy", fields: [agentId], references: [id])
+  agentId String?
 
   // A claim can be one of these types
   motor_claim    MotorClaim?
   burglary_claim BurglaryClaim?
   progressSteps  ClaimProgress[]
 }
+
 model ClaimProgress {
   id          Int      @id @default(autoincrement())
   claim       Claim    @relation(fields: [claimId], references: [id])
@@ -108,72 +109,74 @@ model ClaimProgress {
 
 // Specific details for a motor vehicle insurance claim
 model MotorClaim {
-  id                        Int      @id @default(autoincrement())
+  id       Int   @id @default(autoincrement())
   // One-to-one relationship with the Claim model
-  claim                     Claim    @relation(fields: [claim_id], references: [id])
-  claim_id                  Int      @unique
+  claim    Claim @relation(fields: [claim_id], references: [id])
+  claim_id Int   @unique
 
   // --- Incident Details ---
-  date_of_accident          DateTime
-  location_of_accident      String
-  description_of_accident   String   @db.Text
+  date_of_accident        DateTime
+  location_of_accident    String
+  description_of_accident String   @db.Text
 
   // --- Vehicle & Driver Details ---
-  vehicle_make              String
-  vehicle_model             String
-  vehicle_year              Int
-  vehicle_registration_no   String
-  driver_name               String
-  driver_license_no         String
+  vehicle_make            String
+  vehicle_model           String
+  vehicle_year            Int
+  vehicle_registration_no String
+  driver_name             String
+  driver_license_no       String
 
   // --- Third-Party & Police Details ---
-  third_party_involved      Boolean  @default(false)
-  third_party_details       String?
-  police_report_filed       Boolean  @default(false)
-  police_station            String?
-  police_report_number      String?
+  third_party_involved Boolean @default(false)
+  third_party_details  String?
+  police_report_filed  Boolean @default(false)
+  police_station       String?
+  police_report_number String?
 
   // --- Damage Details ---
-  description_of_damage     String   @db.Text
-  estimated_repair_cost     Decimal?
+  description_of_damage String   @db.Text
+  estimated_repair_cost Decimal?
+  mediaUrls             String[]
 }
 
 // Specific details for a burglary insurance claim
 model BurglaryClaim {
-  id                        Int         @id @default(autoincrement())
+  id       Int   @id @default(autoincrement())
   // One-to-one relationship with the Claim model
-  claim                     Claim       @relation(fields: [claim_id], references: [id])
-  claim_id                  Int         @unique
+  claim    Claim @relation(fields: [claim_id], references: [id])
+  claim_id Int   @unique
 
   // --- Incident Details ---
-  date_of_loss              DateTime
-  date_of_discovery         DateTime
-  description_of_incident   String      @db.Text
+  date_of_loss            DateTime
+  date_of_discovery       DateTime
+  description_of_incident String   @db.Text
 
   // --- Police Report ---
-  police_report_filed       Boolean     @default(false)
-  police_station            String?
-  police_report_number      String?
+  police_report_filed  Boolean @default(false)
+  police_station       String?
+  police_report_number String?
 
   // --- Property Damage ---
-  property_damaged          Boolean     @default(false)
-  damage_description        String?     @db.Text
-  estimated_repair_cost     Decimal?
+  property_damaged      Boolean  @default(false)
+  damage_description    String?  @db.Text
+  estimated_repair_cost Decimal?
 
   // One-to-many relationship with the StolenItem model
-  stolen_items              StolenItem[]
+  stolen_items StolenItem[]
 }
 
 // A separate model to list items stolen during a burglary
 model StolenItem {
-  id                        Int           @id @default(autoincrement())
+  id                Int           @id @default(autoincrement())
   // Many-to-one relationship back to BurglaryClaim
-  burglary_claim            BurglaryClaim @relation(fields: [burglary_claim_id], references: [id])
-  burglary_claim_id         Int
+  burglary_claim    BurglaryClaim @relation(fields: [burglary_claim_id], references: [id])
+  burglary_claim_id Int
 
   // --- Item Details ---
-  item_name                 String
-  item_description          String?       @db.Text
-  purchase_date             DateTime?
-  estimated_value           Decimal
+  item_name        String
+  item_description String?   @db.Text
+  purchase_date    DateTime?
+  estimated_value  Decimal
+  mediaUrl         String?
 }

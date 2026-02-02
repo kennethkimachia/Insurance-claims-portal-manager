@@ -19,6 +19,7 @@ interface StolenItem {
   description: string
   purchaseDate: Date | undefined
   estimatedValue: string
+  mediaUrl?: string
 }
 
 interface MotorClaimDetails {
@@ -38,6 +39,7 @@ interface MotorClaimDetails {
   policeReportNumber: string
   descriptionOfDamage: string
   estimatedRepairCost: string
+  mediaUrls: string[]
 }
 
 interface BurglaryClaimDetails {
@@ -112,6 +114,7 @@ export async function createClaim(data: {
                   police_report_number: data.motorDetails.policeReportNumber,
                   description_of_damage: data.motorDetails.descriptionOfDamage,
                   estimated_repair_cost: data.motorDetails.estimatedRepairCost ? parseFloat(data.motorDetails.estimatedRepairCost) : null,
+                  mediaUrls: data.motorDetails.mediaUrls,
                 },
               },
             }
@@ -135,6 +138,7 @@ export async function createClaim(data: {
                       item_description: item.description,
                       purchase_date: item.purchaseDate,
                       estimated_value: parseFloat(item.estimatedValue),
+                      mediaUrl: item.mediaUrl,
                     })),
                   },
                 },
